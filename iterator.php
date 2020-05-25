@@ -15,7 +15,7 @@ class Villager{
 }
 
 class Group implements Iterator{
-  public $persons = [];
+  private $persons = [];
 
   private $name;
   private $canVote = false;
