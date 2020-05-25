@@ -2,7 +2,7 @@
 
   class FakePDO{
     public function __construct(){
-      $this->seed = mt_rand();
+      $this->seed = random_int(0, PHP_INT_MAX);
     }
 
     public function query($class){
@@ -18,20 +18,40 @@
 
   //on cherche une solution pour n'avoir QU'UN SEUL FakePDO
 
-  class SinglePDO{
 
-    static function getTheOne(){
+  class Logger{
+
+    private static $mylogger = null;
+
+    private function __construct(){
+      $this->seed = random_int(0, PHP_INT_MAX);
+    }
+
+    static function getInstance(){
+
+      if(is_null(self::$mylogger)){
+        self::$mylogger = new Logger();
+      }
+
+      return self::$mylogger;
+    } 
+
+  }
+
+
+  abstract class SinglePDO{
+
+    private static $mypdo = null;
+
+    static function getInstance(){
       //pas le droit d'utiliser $this
 
-      //si ça existe, on réutilise
-      if( /*condition d'existence*/ ){
+      //si ça existe pas, on crée
+      if(is_null(self::$mypdo)){
+          self::$mypdo = new FakePDO("mysql://user:pass@localhost");
+      }
 
-      }else{
-        // si ça existe pas encore, on crée
-        $pdo = new FakePDO("mysql://user:pass@localhost");
-      } 
-        
-      return $pdo;
+      return self::$mypdo;
     }
 
   }
@@ -39,7 +59,7 @@
 
   class Controller1{
     function actionA(){
-      $pdo = SinglePDO::getTheOne();
+      $pdo = SinglePDO::getInstance();
       //j'utilise mon pdo
     }
   }
@@ -48,15 +68,15 @@
 class Village{
 
   public function getVillagers(){
-    $pdo = SinglePDO::getTheOne();
-    var_dump($pdo);
+    $pdo = SinglePDO::getInstance();
+
 
     $villagers = $pdo->query("Villager");
     return $villagers;
   }
 
   public function getHouses(){
-    $pdo = SinglePDO::getTheOne();
+    $pdo = SinglePDO::getInstance();
     var_dump($pdo);
 
     $houses = $pdo->query("House");
@@ -70,8 +90,16 @@ class House{}
 
 class Controller2{
   function actionB(){
-    $pdo = SinglePDO::getTheOne();
+    $logger1 = Logger::getInstance();
+    var_dump($logger1);
+
+    $logger2 = Logger::getInstance();
+    var_dump($logger2);
+
+    die();
+    $pdo = SinglePDO::getInstance();
     var_dump($pdo);
+
 
     $village =  $pdo->query("Village");
     //j'utilise mon pdo pour récupérer un village
